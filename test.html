@@ -1,0 +1,153 @@
+<html>
+<head>
+  <title></title>
+  <script class="jsbin" src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
+  <script>
+  // google:
+// how to use easing functions
+
+(function (global) {
+
+  var animation = function (options) {
+
+    var self = this;
+
+    self.frameRate = 35;
+    self.startPoint = options.startPoint;
+    self.endPoint = options.endPoint;
+    self.duration = options.duration;
+    self.object = options.object;
+    self.property = options.property;
+    self.setSteps();
+    self.onStop = options.onStop;
+    self.onStart = options.onStart;
+    self.autoStart = options.autoStart || true;
+    self.suffix = 'px';
+
+    if (self.autoStart) {
+      self.start();
+    }
+
+  };
+
+  animation.prototype = {
+
+    start: function () {
+      var self = this;
+
+      if (self.onStart) {
+        self.onStart();
+      }
+
+      self.id = setInterval(function () {
+        self.animate.call(self);
+      }, self.frameRate);
+
+    },
+
+    bounceOut: function(/* Decimal? */n){
+        // summary:
+        //        An easing function that 'bounces' near the end of an Animation
+        var s = 7.5625;
+        var p = 2.75;
+        var l;
+        if(n < (1 / p)){
+            l = s * Math.pow(n, 2);
+        }else if(n < (2 / p)){
+            n -= (1.5 / p);
+            l = s * Math.pow(n, 2) + .75;
+        }else if(n < (2.5 / p)){
+            n -= (2.25 / p);
+            l = s * Math.pow(n, 2) + .9375;
+        }else{
+            n -= (2.625 / p);
+            l = s * Math.pow(n, 2) + .984375;
+        }
+        return l;
+    },
+
+    easeInOut: function (minValue,maxValue,totalSteps,actualStep,powr) {
+      var delta = maxValue - minValue;
+      var stepp = minValue+(Math.pow(((1 / totalSteps) * actualStep), powr) * delta); 
+      return Math.ceil(stepp) 
+    },
+
+    stop: function () {
+      var self = this;
+      clearInterval(self.id);
+      if (self.onStop) {
+        self.onStop();
+      }
+    },
+
+    doStep: function (obj, prop, pos) {
+      obj[prop] = pos + this.suffix;
+    },
+
+    animate: function () {
+
+      var self = this;
+      var obj = self.object;
+      var prop = self.property;
+
+      if (parseInt(obj[prop]) < self.endPoint) {
+        var pos = parseInt(obj[prop]) + this.step;
+        self.doStep(obj, prop, ((-Math.cos(pos*Math.PI)/2) + 0.5));
+      }
+      else {
+        self.stop();
+      }
+    },
+
+    setSteps: function () {
+      var self = this;
+      self.step = Math.ceil(self.endPoint / Math.ceil(self.duration / self.frameRate));
+    }
+
+  };
+
+  global.Animation = animation;
+
+}(this));
+
+function myAnimation () {
+
+ var started, stopped;
+
+ console.log('myanimation');
+
+ new Animation({
+   object: document.getElementById('hello').style,
+   property: 'width',
+   duration: 1000,
+   endPoint: 400,
+   startPoint: 0,
+   autoStart: false,
+   onStart: function () {
+     started = +new Date();
+     console.log('Started', started);
+   },
+   onStop: function () {
+     stopped = +new Date();
+     console.log('Stopped', stopped);
+     console.log('Actual Duration', stopped - started);
+   }
+ });
+
+}
+
+console.log('test');
+
+  jQuery(document).ready(function () {
+    console.log('ready');
+    jQuery('#hello').bind('click', function () {
+      myAnimation();
+    });
+  });
+
+  </script>
+</head>
+<body>
+  <div id="hello" style="width:200px;background-color:red;">Hello World</div>
+</body>
+</html>

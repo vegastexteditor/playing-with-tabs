@@ -1,0 +1,168 @@
+body{
+  padding:50px;
+}
+
+html body * {
+  cursor:default;
+  -moz-user-select:none;
+  -khtml-user-select:none;
+  -webkit-user-select:none;
+  user-select:none;
+}
+
+.tab .close{
+    border: 1px solid buttonshadow;
+    font-family: verdana,arial;
+    height: 8px;
+    line-height: 7px;
+    position: absolute;
+    right: 6px;
+    top: 4px;
+    width: 9px;
+    opacity:.2;
+}
+.tab:hover .close{
+  opacity:1;
+}
+
+.container {
+    outline: 1px solid buttonshadow;
+    float: left;
+    height: 260px;
+    outline-top:0px;
+    width:1022px;/*var*/
+}
+
+.body {
+    border-top: 1px solid buttonshadow;
+    background-color: #eee;
+    float: left;
+    height: 100%;
+    width: 100%;
+}
+
+.tabs{
+  background-color:#E5E5E5;
+  outline-bottom: 1px solid #aaa;
+  float: left;
+  height:17px;
+  overflow:hidden;
+  position:relative;
+}
+
+.tabScroller {
+  float:left;
+  overflow:hidden;
+  width:953px;/*var=paneWidth-paneActionWidth*/
+  border-right: 1px solid buttonshadow;/*var*/
+}
+
+.tabStretcher {
+  float:left;
+  width:99999px;
+}
+
+.paneMiniArea{
+  float:left;
+  background-color:#EFF5FC;
+  width:68px;
+}
+
+.actionBite, .infoBite {
+  display: block;
+  line-height: 17px;
+  float: right;
+  background-color: buttonface;
+  outline: 1px solid buttonshadow;
+  font-family:verdana, arial;
+  font-size:11px;
+  text-align:center;
+  color:#000;
+  width:17px;
+  text-decoration:none;
+}
+
+.actionBite:hover {
+  background-color:#f7f7f7;
+}
+
+.actionBite.moreLeft, 
+.actionBite.moreRight {
+  font-size:14px;
+  line-height: 15px;
+  padding-bottom: 6px;
+}
+.actionBite.moreLeft {
+  color:#bebebe;
+}
+
+.actionBite.moreRight {
+  color:#000;
+}
+
+.etc {
+  float:left;
+  background:url(http://picol.org/images/picol.png) 0 0;
+  width:12px;
+  height:12px;
+}
+
+.tab, .placeHolder {
+  position:relative;
+  background-color:buttonFace;
+  float:left;
+  outline:1px solid buttonshadow;
+  padding:0 20px 0 10px;
+  height:17px;
+  min-width:85px;
+  font-size:11px;
+  font-family:verdana, arial;
+  line-height:17px;
+  text-align:center;
+}
+
+.placeHolder {
+  background:transparent none;
+}
+
+/*
+div#t1 {
+  background-color:red;
+}
+
+div#t2 {
+  background-color:green;
+}
+
+div#t3 {
+  background-color:blue;
+}
+
+div#t4 {
+  background-color:pink;
+}
+
+div#t5 {
+  background-color:yellow;
+}
+
+div#t6 {
+  background-color:brown;
+}
+
+div#t7 {
+  background-color:gold;
+}
+
+div#t8 {
+  background-color:silver;
+}
+
+div#t9 {
+  background-color:purple;
+}
+
+div#t10 {
+  background-color:hotpink;
+}
+*/
