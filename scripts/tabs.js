@@ -3,16 +3,12 @@
 var TAB_ANIMATION_SPEED = 250; 
 var tabAnimationsRunning = 0;
 
-global.TabSet= function () {
-  this.init();
+global.TabCollectionDragger= function () {
+  this.attachEvents();
   this.lastHintPosition = false;
 };
 
-global.TabSet.prototype = {
-
-  init: function () {
-    this.attachEvents();
-  },
+global.TabCollectionDragger.prototype = {
 
   /**
    * Calculates area and position information per each tab and puts it
@@ -25,11 +21,6 @@ global.TabSet.prototype = {
     var tabAreas = [],
         element,
         offset,
-        /* // Not needed at the moment.
-        bottom,
-        top,
-        height,
-        */
         left,
         right,
         width;
@@ -39,25 +30,12 @@ global.TabSet.prototype = {
       offset = element.offset();
 
       width = element.outerWidth();
-      /* // not needed at the moment.
-      height = element.outerHeight();
-      */
 
       left = offset.left;
       right = offset.left + width;
-      /* // Not needed at the moment.
-      top = offset.top;
-      bottom = offset.top + height;
-      */
 
       tabAreas.push({
         element: tabElements[i],
-        /* // not needed at the moment.
-        height: height,
-        top: top,
-        bottom: bottom,
-        middleY: Math.floor(top + (height / 2)),
-        */
         width: width,
         left: left,
         right: right,
@@ -354,14 +332,12 @@ global.TabSet.prototype = {
     jQuery(scope).find('.placeHolder').remove();
   },
 
-  scrollToVisibleTab: function (tabSet , direction) {
+  scrollToVisibleTab: function (tabsWrapper, direction) {
 
-    nextOrPrev = (direction == 'left') ? 'prev' : 'next';
+    var nextOrPrev = (direction == 'left') ? 'prev' : 'next';
 
-    var tabs = tabSet.find('.tab');
-
-    var tabScroller = tabSet.find('.tabScroller:first');
-
+    var tabs = tabsWrapper.find('.tab');
+    var tabScroller = tabsWrapper.find('.tabScroller:first');
     var tabScrollerWidth = tabScroller.width();
 
     var tab,
@@ -398,14 +374,14 @@ global.TabSet.prototype = {
     var self = this;
 
     jQuery('.scrollRight').bind('click', function (e) {
-      var tabSet = jQuery(e.target).parents('.tabs:first');
-      self.scrollToVisibleTab(tabSet, 'right');
+      var tabsWrapper = jQuery(e.target).parents('.tabs:first');
+      self.scrollToVisibleTab(tabsWrapper, 'right');
       e.preventDefault();
     });
 
     jQuery('.scrollLeft').bind('click', function (e) {
-      var tabSet = jQuery(e.target).parents('.tabs:first');
-      self.scrollToVisibleTab(tabSet, 'left');
+      var tabsWrapper = jQuery(e.target).parents('.tabs:first');
+      self.scrollToVisibleTab(tabsWrapper, 'left');
       e.preventDefault();
     });
 
@@ -445,19 +421,13 @@ global.TabSet.prototype = {
 
           cursorPositionRelativeToTab =  (tabElement.outerWidth() / 2) - ((tabElement.outerWidth() / 2) - (mouseDownX - tabOffsetLeft));
 
-          var blah = mouseDownX - tabElementWrapper.offset().left;
-
           // According to the current mouse position, where should the tab go?
           var tabDestinationPos = self.gettabDestinationPos(mouseDownX, tabAreas, tabElement[0]);
 
           // While dragging the tab around, what was the last calculated destination position?
           var lasttabDestinationPos = tabDestinationPos,
 
-          /** @todo: last hint position */
-
           elementMarginLeft = parseInt(tabElement.css('margin-left')),
-
-          tabElementPosition = self.getTabElementPosition(tabElement),
 
           offsetLeft = mouseDownX - tabOffsetLeft + elementMarginLeft;
 
@@ -475,18 +445,14 @@ global.TabSet.prototype = {
       var dragTab = function (eMouseMove) {
 
         if (!startedDragging) {
-//                if (Math.abs(eMouseMove.clientX - eMouseDown.clientX) > TAB_MOVE_STICKYNESS  || Math.abs(eMouseMove.y - eMouseDown.y) > TAB_MOVE_STICKYNESS) {
-            startedDragging = true;
-//                }
+          startedDragging = true;
         }
         else {
 
           var mouseMoveX = eMouseMove.clientX,
               mouseMoveY = eMouseMove.clientY;
 
-          // @TODO: var cursorPositionRelativeToTabContainer = mouseMoveX - cursorPositionRelativeToTab
-
-           var cursorPositionRelativeToTabContainer = mouseMoveX - cursorPositionRelativeToTab
+          var cursorPositionRelativeToTabContainer = mouseMoveX - cursorPositionRelativeToTab
 
           // Determine where the new tab position should be according to the cursor position.
           tabDestinationPos = self.gettabDestinationPos(cursorPositionRelativeToTabContainer, tabAreas, eMouseMove.target);
@@ -558,6 +524,6 @@ global.TabSet.prototype = {
 
 jQuery(document).ready(function () {
 
-  var tabSet = new TabSet('.tabs:first');
+  new TabCollectionDragger('.tabs:first');
 
 });
