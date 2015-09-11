@@ -3,9 +3,11 @@
 var TAB_ANIMATION_SPEED = 250; 
 var tabAnimationsRunning = 0;
 
-global.TabCollectionDragger= function () {
+global.TabCollectionDragger = function (tabSelector, tabContainerSelector) {
   this.attachEvents();
   this.lastHintPosition = false;
+  this.tabSelector = tabSelector || '.tab'; // The "Tab" Element
+  this.tabContainerSelector = tabContainerSelector || '.tabs'; // Element Contains a series of "Tab" Elements
 };
 
 global.TabCollectionDragger.prototype = {
@@ -17,7 +19,7 @@ global.TabCollectionDragger.prototype = {
    * in this scenario... mouseover seems like it should work?
    */
   getTabAreas: function () {
-    var tabElements = jQuery('.tab');
+    var tabElements = jQuery(this.tabSelector);
     var tabAreas = [],
         element,
         offset,
@@ -66,7 +68,7 @@ global.TabCollectionDragger.prototype = {
     elementCopyStyle.zIndex = '1';
     elementCopyStyle.left = x + 'px';
 
-    elementCopy.addClass('dragging');
+    elementCopy.addClass('tabDragging');
 
     return elementCopy;
   },
@@ -79,7 +81,14 @@ global.TabCollectionDragger.prototype = {
     var tabElement;
 
     if (target) {
-      tabElement = (target.className.indexOf('tab') == -1) ? target.parentNode : target;
+
+      if (jQuery(target).is(this.tabSelector)) {
+        tabElement = jQuery(target);
+      }
+      else {
+        tabElement = jQuery(target).parents(this.tabSelector).first();
+      }
+
       this.tabElement = tabElement;
     }
     else if (this.tabElement){
@@ -97,12 +106,13 @@ global.TabCollectionDragger.prototype = {
   isTabElement: function (element) {
     var tabElement = false;
     element = jQuery(element);
-    if (element.hasClass('tab')) {
+    if (element.is(this.tabSelector)) {
       tabElement = true;
     }
-    if (element.parent().hasClass('tab')) {
+    if (element.parents(this.tabSelector).length > 0) {
       tabElement = true;
     }
+
     return tabElement;
   },
 
@@ -111,7 +121,7 @@ global.TabCollectionDragger.prototype = {
    * position)
    * @todo, the params for this function is ghetto
    */
-  gettabDestinationPos: function (cursorPositionRelativeToTabContainer, tabAreas, tabElement) {
+  getTabDestinationPos: function (cursorPositionRelativeToTabContainer, tabAreas, tabElement) {
 
     var tabArea,
         tabAreaLen = tabAreas.length,
@@ -165,9 +175,9 @@ global.TabCollectionDragger.prototype = {
    * When we are done dragging we need to "drop" the tab element in the
    * new position, inserting it into the DOM.
    */
-  insertTabElementAtPosition: function (tabElement, position, tabElementWrapper) {
+  insertTabElementAtPosition: function (tabElement, position, tabContainerElement) {
     var tabElementDestination,
-        tabs = tabElementWrapper.find('.tab');
+        tabs = tabContainerElement.find(this.tabSelector);
 
 
     if (position !== 0) {
@@ -255,10 +265,10 @@ global.TabCollectionDragger.prototype = {
    * Displays an the empty slot that visually pushes tabs, given a position
    * it will insert the slot and animate the tab that needs to be pushed over.
    */
-  showDestinationHintAtPosition: function (position, tabElementWrapper) {
+  showDestinationHintAtPosition: function (position, tabContainerElement) {
 
     var tabElement,
-        tabs = tabElementWrapper.find('.tab'),
+        tabs = tabContainerElement.find(this.tabSelector),
         destinationHint = this.createPlaceHolder(),
         lastHintPosition = this.lastHintPosition,
         shouldAnimateShyTab,
@@ -266,7 +276,7 @@ global.TabCollectionDragger.prototype = {
         tabGoingInDirection;
 
     // Remove any previous destination hints.
-    this.removeDestinationHint(tabElementWrapper);
+    this.removeDestinationHint(tabContainerElement);
 
     if (lastHintPosition !== false) {
       if (lastHintPosition == undefined || lastHintPosition === position) {
@@ -319,7 +329,7 @@ global.TabCollectionDragger.prototype = {
   },
 
   getTabElementPosition: function (tabElement) {
-    var wrapper = tabElement.parents('.tabs:first').find('.tab');
+    var wrapper = tabElement.parents(this.tabContainerSelector).first().find(this.tabSelector);
     return wrapper.index(tabElement);
   },
 
@@ -332,57 +342,37 @@ global.TabCollectionDragger.prototype = {
     jQuery(scope).find('.placeHolder').remove();
   },
 
-  scrollToVisibleTab: function (tabsWrapper, direction) {
-
-    var nextOrPrev = (direction == 'left') ? 'prev' : 'next';
-
-    var tabs = tabsWrapper.find('.tab');
-    var tabScroller = tabsWrapper.find('.tabScroller:first');
-    var tabScrollerWidth = tabScroller.width();
-
-    var tab,
-        tabRightPos,
-        lastFullyVisibleTab;
-
-    for (var i = 0; i < tabs.length; i++) {
-
-      tab = jQuery(tabs[i]);
-
-      tabRightPos = tab.position().left + tab.width();
-
-      if (tabRightPos < tabScrollerWidth) {
-        lastFullyVisibleTab = tab;
-      }
-
-    }
-
-    var nextTab = lastFullyVisibleTab[nextOrPrev]();
-
-    if (nextTab.length) {
-      var nextTabPosLeft = nextTab.position().left;
-      var nextTabPaddingLeft = parseInt(nextTab.css('padding-left'));
-      var nextTabPaddingRight = parseInt(nextTab.css('padding-right'));
-      var nextTabWidth = nextTab.width() + nextTabPaddingLeft + nextTabPaddingRight;
-      var unvisibleTabPixelsToRight = nextTabWidth - (tabScrollerWidth - nextTabPosLeft);
-      tabScroller.animate({scrollLeft: "+=" + unvisibleTabPixelsToRight});
-    }
-
-  },
 
   attachEvents: function () {
 
     var self = this;
 
-    jQuery('.scrollRight').bind('click', function (e) {
-      var tabsWrapper = jQuery(e.target).parents('.tabs:first');
-      self.scrollToVisibleTab(tabsWrapper, 'right');
-      e.preventDefault();
-    });
+    jQuery(document).bind('mousedown', function (eMouseDown) {
 
-    jQuery('.scrollLeft').bind('click', function (e) {
-      var tabsWrapper = jQuery(e.target).parents('.tabs:first');
-      self.scrollToVisibleTab(tabsWrapper, 'left');
-      e.preventDefault();
+      mouseDownTarget = eMouseDown.target;
+
+      // If its not a tab element, skip it
+      if (!self.isTabElement(mouseDownTarget)){
+        return false;
+      }
+
+      // Its not a left click, skip it
+      if (eMouseDown.which !== 1) {
+        return false;
+      }
+
+      var tabElement = self.getTabElement(mouseDownTarget);
+      var tabContainerElement = tabElement.parents(self.tabContainerSelector).first();
+      var tabs = tabContainerElement.find(self.tabSelector);
+
+      tabs.removeClass('active');
+
+      tabs.css('z-index', 1);
+
+      tabElement.addClass('active');
+      tabElement.css('z-index', 2);
+
+
     });
 
     jQuery(document).bind('mousedown', function (eMouseDown) {
@@ -404,7 +394,7 @@ global.TabCollectionDragger.prototype = {
       // Get the main tab element from the target. (may be an element inside of the tab)
       var tabElement = self.getTabElement(eMouseDown.target),
 
-          tabElementWrapper = tabElement.parents('.tabs:first'),
+          tabContainerElement = tabElement.parents(this.tabContainerSelector).first(),
 
           // Shortcuts
           mouseDownX = eMouseDown.clientX,
@@ -417,12 +407,14 @@ global.TabCollectionDragger.prototype = {
           // position information per each tab
           tabAreas = self.getTabAreas(),
 
+          tabOffsetTop = tabElement.offset().top,
+
           tabOffsetLeft = tabElement.offset().left,
 
           cursorPositionRelativeToTab =  (tabElement.outerWidth() / 2) - ((tabElement.outerWidth() / 2) - (mouseDownX - tabOffsetLeft));
 
           // According to the current mouse position, where should the tab go?
-          var tabDestinationPos = self.gettabDestinationPos(mouseDownX, tabAreas, tabElement[0]);
+          var tabDestinationPos = self.getTabDestinationPos(mouseDownX, tabAreas, tabElement[0]);
 
           // While dragging the tab around, what was the last calculated destination position?
           var lasttabDestinationPos = tabDestinationPos,
@@ -438,6 +430,7 @@ global.TabCollectionDragger.prototype = {
 
       // Move the draggable Element along with the cursor x position.
       draggableElement[0].style.left = (mouseDownX - offsetLeft) + 'px';
+      draggableElement[0].style.top = tabOffsetTop + 'px';
 
       /**
        * On Mouse Move.
@@ -455,9 +448,9 @@ global.TabCollectionDragger.prototype = {
           var cursorPositionRelativeToTabContainer = mouseMoveX - cursorPositionRelativeToTab
 
           // Determine where the new tab position should be according to the cursor position.
-          tabDestinationPos = self.gettabDestinationPos(cursorPositionRelativeToTabContainer, tabAreas, eMouseMove.target);
+          tabDestinationPos = self.getTabDestinationPos(cursorPositionRelativeToTabContainer, tabAreas, eMouseMove.target);
 
-          // If the mouse isn't over a tab position, find out where it should go. @TODO: move to this.gettabDestinationPos func
+          // If the mouse isn't over a tab position, find out where it should go. @TODO: move to this.getTabDestinationPos func
           if (tabDestinationPos === false) {
             // If its to the right of the last tab.
             if (mouseMoveX - cursorPositionRelativeToTab > tabAreas[tabAreas.length - 1].left) {
@@ -473,7 +466,7 @@ global.TabCollectionDragger.prototype = {
           // If we have a destination, and it is different than what the last destination was.
           if (tabDestinationPos !== false && tabDestinationPos !== lasttabDestinationPos) {
 
-            self.showDestinationHintAtPosition(tabDestinationPos, tabElementWrapper);
+            self.showDestinationHintAtPosition(tabDestinationPos, tabContainerElement);
 
             // notate what the last destination position was so we can figure
             // out when we have moved to a new destination position
@@ -494,9 +487,9 @@ global.TabCollectionDragger.prototype = {
 
         lasttabDestinationPos = tabDestinationPos;
 
-        self.insertTabElementAtPosition(tabElement, tabDestinationPos, tabElementWrapper);
+        self.insertTabElementAtPosition(tabElement, tabDestinationPos, tabContainerElement);
 
-        self.removeDestinationHint(tabElementWrapper);
+        self.removeDestinationHint(tabContainerElement);
 
         draggableElement.remove();
 
@@ -517,13 +510,11 @@ global.TabCollectionDragger.prototype = {
 
   }
 
-      };
+};
 
 }(this));
 
-
 jQuery(document).ready(function () {
-
-  new TabCollectionDragger('.tabs:first');
-
+  new TabCollectionDragger('.tab', '.tabContainer');
 });
+
